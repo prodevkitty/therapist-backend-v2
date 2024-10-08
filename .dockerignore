@@ -1,0 +1,6 @@
+.idea/
+logs/*
+!logs/.keep
+therapist_chatbot_env/
+!therapist_chatbot_env/Lib/site-packages/
+.git
