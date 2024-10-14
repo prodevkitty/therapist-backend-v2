@@ -1,0 +1,41 @@
+# FastAPI and related web framework tools
+fastapi==0.95.1
+uvicorn==0.22.0
+
+# PostgreSQL driver
+psycopg2-binary==2.9.7  # Use the binary package for ease of installation
+
+# SQLAlchemy ORM
+sqlalchemy==2.0.15
+
+# Redis client
+redis==4.5.4
+
+# Password hashing and authentication
+passlib[bcrypt]==1.7.4
+ 
+bcrypt 
+# JWT token handling
+python-jose==3.3.0
+ 
+# Environment variable management
+python-dotenv==1.0.0
+
+# Cerebras AI SDK for your Llama model integration
+cerebras-cloud-sdk==1.5.0
+
+# Libraries for voice and audio handling
+pydub==0.25.1
+speechrecognition==3.8.1
+
+# Optional: Task queuing for asynchronous operations
+celery==5.2.7
+
+# Websockets and Real-Time Communication
+python-socketio==5.8.0
+fastapi-socketio==0.0.10  # Updated version
+
+# Additional optional libraries
+aiofiles==22.1.0
+
+bcrypt==4.0.1  # Upgraded bcrypt

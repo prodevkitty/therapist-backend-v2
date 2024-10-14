@@ -1,6 +1,8 @@
 .idea/
-logs/*
-!logs/.keep
-therapist_chatbot_env/
-!therapist_chatbot_env/Lib/site-packages/
+app_v1/*
+therapist_backend_v2/*
 .git
+projectStrategy.txt
+main_v1.py
+__pycache__
+services/__pycache__
