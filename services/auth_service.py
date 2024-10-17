@@ -1,25 +1,18 @@
 import redis
-from sqlalchemy import create_engine, Column, Integer, String
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session
 from passlib.context import CryptContext
-from fastapi import Depends, HTTPException
+from fastapi import HTTPException
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
 import os
 from dotenv import load_dotenv
-import time
+from models.user import User
 
 load_dotenv()  # Load environment variables from .env file
 
 # Database URL and Redis setup
 DATABASE_URL = os.getenv("DATABASE_URL")
 REDIS_URL = os.getenv("REDIS_URL")
-
-# Set up PostgreSQL connection
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
 
 # Set up Redis connection
 redis_client = redis.StrictRedis.from_url(REDIS_URL)
@@ -30,35 +23,14 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # JWT settings
 SECRET_KEY = os.getenv("SECRET_KEY", "prodevkitty_jwt_secret_key")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 100
-# User model
-class User(Base):
-    __tablename__ = "users"
-    id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True, nullable=False)
-    hashed_password = Column(String, nullable=False)
+ACCESS_TOKEN_EXPIRE_MINUTES = 1000
 
-# Initialize database
-Base.metadata.create_all(bind=engine)
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-# Password hashing and verification
 def hash_password(password: str):
     return pwd_context.hash(password)
 
 def verify_password(plain_password: str, hashed_password: str):
     return pwd_context.verify(plain_password, hashed_password)
-def check_token_form_auth(token: str):
-    token_status = redis_client.get(token)
-    token_ttl = redis_client.ttl(token)  # Get time-to-live of the token
-    print(f"token_status: {token_status}, token_ttl: {token_ttl}")
-    return "ok"
+
 # Create JWT token and store in Redis
 def create_access_token(data: dict):
     to_encode = data.copy()
@@ -110,28 +82,19 @@ def validate_access_token(token: str):
     except JWTError:
         raise HTTPException(status_code=401, detail="Token expired or invalid")
 
-
-
-
-
-# Invalidate JWT token (Logout)
-def invalidate_access_token(token: str):
-    redis_client.delete(token)
-
-# Authenticate user during login
-def authenticate_user(db, username: str, password: str):
+def authenticate_user(db: Session, username: str, password: str):
     user = db.query(User).filter(User.username == username).first()
-    if not user or not verify_password(password, user.hashed_password):
-        raise HTTPException(status_code=400, detail="Invalid credentials")
-    return user
+    if user and verify_password(password, user.password_hash):
+        return user
+    return None
 
 # Register a new user
-def register_user(db, username: str, password: str):
+def register_user(db, username: str, password: str, email: str):
     existing_user = db.query(User).filter(User.username == username).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Username already taken")
     hashed_password = hash_password(password)
-    new_user = User(username=username, hashed_password=hashed_password)
+    new_user = User(username= username, email= email, password_hash=hashed_password)
     db.add(new_user)
     db.commit()
     db.refresh(new_user)

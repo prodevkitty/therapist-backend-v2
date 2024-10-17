@@ -1,86 +1,42 @@
 from fastapi import FastAPI, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from services.auth_service import User, authenticate_user, create_access_token, register_user, get_db, validate_access_token, invalidate_access_token, check_token_form_auth
+from services.auth_service import User, authenticate_user, create_access_token, register_user, validate_access_token
 from services.ai_service import get_answer, process_audio_to_text
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.middleware.cors import CORSMiddleware
-import socketio
 from jose import JWTError
+from routers import auth_router, progress_router
+import socketio
+from database import Base, engine
 
-# FastAPI app
-sio = socketio.AsyncServer(cors_allowed_origins='*', async_mode='asgi')
+# Initialize FastAPI app
 app = FastAPI()
 
 # Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Adjust to match your frontend URL
+    allow_origins=["*"],  # Adjust to match your frontend URL
     allow_credentials=True,
     allow_methods=["*"],  # Allows all methods (GET, POST, etc.)
     allow_headers=["*"],  # Allows all headers
 )
 
+# Include routers
+app.include_router(auth_router.router, prefix="/auth", tags=["auth"])
+app.include_router(progress_router.router, prefix="/progress", tags=["progress"])
 
-# OAuth2 scheme for handling bearer tokens
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to the Therapy App"}
 
-# Models for requests
-class TextRequest(BaseModel):
-    text: str
-    is_voice: bool = False  # False for text input, True for voice
-
-class RegisterUserRequest(BaseModel):
-    username: str
-    password: str
-
-class LoginUserRequest(BaseModel):
-    username: str
-    password: str
-
-# # AI Route for Text/Voice inputs via HTTP
-# @app.post("/ai/ask")
-# async def ask_ai(request: TextRequest, user: User = Depends(authenticate_user)):
-#     response = await process_input(request.text, request.is_voice)
-#     return response
-
-# Registration route
-@app.post("/register")
-def register(user: RegisterUserRequest, db: Session = Depends(get_db)):
-    return register_user(db, user.username, user.password)
-
-# Login route (returns JWT token)
-@app.post("/token")
-def login(user: LoginUserRequest, db: Session = Depends(get_db)):
-    authenticated_user = authenticate_user(db, user.username, user.password)
-    access_token = create_access_token(data={"sub": authenticated_user.username})
-    return {"access_token": access_token, "token_type": "bearer"}
-
-# Protected route (requires a valid token)
-@app.get("/protected")
-def protected_route(token: str = Depends(oauth2_scheme)):
-    payload = validate_access_token(token)
-    return {"message": "This is a protected route", "user": payload["sub"]}
-
-# Logout route (invalidate token)
-@app.post("/logout")
-def logout(token: str = Depends(oauth2_scheme)):
-    invalidate_access_token(token)
-    return {"msg": "Successfully logged out"}
-
-@app.get("/check_token/{token}")
-def check_token(token: str):
-    result = check_token_form_auth(token)
-    
-
-# --- SOCKET.IO INTEGRATION ---
-
-# Middleware for validating JWT tokens in Socket.IO connections
-
-
-
-# Mount Socket.IO server on FastAPI app using ASGI
+# Initialize Socket.IO server
+sio = socketio.AsyncServer(cors_allowed_origins='*', async_mode='asgi')
 app = socketio.ASGIApp(sio, app)
+
+
+# Initialize database
+Base.metadata.create_all(bind=engine)
 
 @sio.event
 async def connect(sid, environ, auth):
