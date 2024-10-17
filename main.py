@@ -3,12 +3,13 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from services.auth_service import User, authenticate_user, create_access_token, register_user, validate_access_token
 from services.ai_service import get_answer, process_audio_to_text
+from services.notification_service import generate_notifications
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.middleware.cors import CORSMiddleware
 from jose import JWTError
-from routers import auth_router, progress_router
+from routers import auth_router, progress_router, subscription_router, tool_router
 import socketio
-from database import Base, engine
+from database import Base, engine, SessionLocal
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -25,6 +26,8 @@ app.add_middleware(
 # Include routers
 app.include_router(auth_router.router, prefix="/auth", tags=["auth"])
 app.include_router(progress_router.router, prefix="/progress", tags=["progress"])
+app.include_router(subscription_router.router, prefix="/subscriptions", tags=["subscriptions"])
+app.include_router(tool_router.router, prefix="/tools", tags=["tools"])
 
 @app.get("/")
 def read_root():
@@ -40,7 +43,20 @@ Base.metadata.create_all(bind=engine)
 
 @sio.event
 async def connect(sid, environ, auth):
+    """
+    Handle new client connection.
+
+    Args:
+        sid (str): Session ID.
+        environ (dict): Environment variables.
+        auth (dict): Authentication data.
+
+    Raises:
+        JWTError: If the authorization token is missing or invalid.
+        HTTPException: If there is an error during token validation or notification generation.
+    """
     print(f"Auth data received: {auth}")
+    db: Session = SessionLocal()
     try:
         if not auth or 'token' not in auth:
             raise JWTError("Missing authorization token")
@@ -48,13 +64,15 @@ async def connect(sid, environ, auth):
         # Extract and validate token
         token = auth['token'].split(" ")[1]
         user = validate_access_token(token)  # This will raise JWTError if token is invalid
+        username = user['sub']
         print(f"User {user['sub']} connected with session {sid}")
+        notification_message = await generate_notifications(username, db)
+        await sio.emit('frist_notification', {'notification': notification_message}, to=sid)
     except HTTPException as e:
         # Emit the error to the client
         print(f"Auth error: {e.detail}")
         await sio.emit('auth_error', {'code': e.status_code, 'message': e.detail}, to=sid)
-        await sio.disconnect(sid)  # Disconnect after sending error
-
+        await sio.disconnect(sid)  # Disconnect after sending errors
     except Exception as e:
         # Handle general exceptions
         print(f"Unexpected error during connection: {e}")

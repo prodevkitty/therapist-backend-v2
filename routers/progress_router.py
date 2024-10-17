@@ -22,8 +22,14 @@ class ProgressResponse(BaseModel):
     negative_thoughts_reduction: int
     positive_thoughts_increase: int
 
+    class Config:
+        orm_mode = True
+
 @router.post("/progress", response_model=ProgressResponse)
-def track_progress(progress: ProgressCreate, db: Session = Depends(get_db)):
+def create_progress(progress: ProgressCreate, db: Session = Depends(get_db)):
+    """
+    Create a new progress entry.
+    """
     db_progress = Progress(**progress.dict())
     db.add(db_progress)
     db.commit()
@@ -32,4 +38,16 @@ def track_progress(progress: ProgressCreate, db: Session = Depends(get_db)):
 
 @router.get("/progress/{user_id}", response_model=list[ProgressResponse])
 def get_progress(user_id: int, db: Session = Depends(get_db)):
+    """
+    Get all progress entries for a user.
+    """
     return db.query(Progress).filter(Progress.user_id == user_id).all()
+
+@router.get("/progress_report/{user_id}", response_model=list[ProgressResponse])
+def get_weekly_progress_report(user_id: int, db: Session = Depends(get_db)):
+    """
+    Get the weekly progress report for a user.
+    """
+    from datetime import datetime, timedelta
+    one_week_ago = datetime.now() - timedelta(days=7)
+    return db.query(Progress).filter(Progress.user_id == user_id, Progress.date >= one_week_ago).all()

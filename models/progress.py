@@ -10,3 +10,5 @@ class Progress(Base):
     stress_level = Column(Integer)
     negative_thoughts_reduction = Column(Integer)
     positive_thoughts_increase = Column(Integer)
+
+    user = relationship("User", back_populates="progress")

@@ -9,3 +9,5 @@ class TherapySession(Base):
     session_date = Column(DateTime)
     session_duration = Column(Integer)
     notes = Column(Text)
+
+    user = relationship("User", back_populates="therapy_sessions")
