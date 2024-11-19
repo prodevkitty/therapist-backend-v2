@@ -7,7 +7,7 @@ from services.notification_service import generate_notifications
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.middleware.cors import CORSMiddleware
 from jose import JWTError
-from routers import auth_router, progress_router, subscription_router, tool_router
+from routers import auth_router, progress_router, subscription_router, tool_router, blog_router
 import socketio
 from database import Base, engine, SessionLocal
 
@@ -28,6 +28,7 @@ app.include_router(auth_router.router, prefix="/auth", tags=["auth"])
 app.include_router(progress_router.router, prefix="/progress", tags=["progress"])
 app.include_router(subscription_router.router, prefix="/subscriptions", tags=["subscriptions"])
 app.include_router(tool_router.router, prefix="/tools", tags=["tools"])
+app.include_router(blog_router.router, prefix="/blog", tags=["blog"])
 
 @app.get("/")
 def read_root():
@@ -67,7 +68,8 @@ async def connect(sid, environ, auth):
         username = user['sub']
         print(f"User {user['sub']} connected with session {sid}")
         notification_message = await generate_notifications(username, db)
-        await sio.emit('frist_notification', {'notification': notification_message}, to=sid)
+        print(notification_message)
+        await sio.emit('first_notification', {'notification': notification_message}, to=sid)
     except HTTPException as e:
         # Emit the error to the client
         print(f"Auth error: {e.detail}")
@@ -103,8 +105,21 @@ async def user_message(sid, data):
         else:
             text = message
 
+        # Construct AI instructions
+        therapy_instructions = (
+            "You are a virtual therapist. Engage the user in a reflective dialogue. Begin by asking broad questions "
+            "to understand their emotional state and concerns. Use supportive and empathetic language. Reflect on "
+            "what they share to build a clear understanding. Avoid giving direct solutions; instead, guide them "
+            "to explore their thoughts and feelings. Ask only one question at a time, ensuring each builds upon the "
+            "user's response. For example: 'How have you been feeling lately?' and then move to specific questions "
+            "based on their answers. Summarize key points and offer gentle, non-prescriptive suggestions."
+        )
+        
+        # Combine user input with instructions
+        input_text = f"{therapy_instructions}\n\nUser input: {text}"  
+
         # Process the text input with AI
-        ai_response = await get_answer(text)
+        ai_response = await get_answer(input_text)
         
         # Ensure ai_response is a string or object with the 'response' key
         response_data = {"response": ai_response.get('response') if isinstance(ai_response, dict) else ai_response}

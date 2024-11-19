@@ -24,7 +24,7 @@ async def generate_recommendation_message(improvement_percentage, language='en')
     ai_response = await get_answer(request_msg_AI)
     return ai_response.get('response')
 
-async def generate_notifications(username: str, db: Session):
+async def generate_notifications(username: str, db: Session): 
     """
     Generate notifications for a user based on their progress.
 
@@ -46,20 +46,21 @@ async def generate_notifications(username: str, db: Session):
     user_progress = db.query(Progress).filter(Progress.user_id == user_id).all()
     if not user_progress:
         return generate_motivational_message(-100) 
-    print(user_progress)
 
     # Calculate improvement percentage (example logic)
     initial_stress_level = int(user_progress[0].stress_level)
     latest_stress_level = int(user_progress[-1].stress_level)
     improvement_percentage = ((initial_stress_level - latest_stress_level) / initial_stress_level) * 100
+    print("improvement_percentage:")
     print(improvement_percentage)
+
+
     # Generate motivational message using AI service
     motivational_message = generate_motivational_message(improvement_percentage)
-    print("motivation_message: ", motivational_message)
 
     # Generate recommendation message using AI service
     recommendation_message = await generate_recommendation_message(improvement_percentage)
-    print(recommendation_message)
+    
     result_message = motivational_message + "\n" + recommendation_message
 
     return result_message

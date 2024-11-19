@@ -23,7 +23,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # JWT settings
 SECRET_KEY = os.getenv("SECRET_KEY", "prodevkitty_jwt_secret_key")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 1000
+ACCESS_TOKEN_EXPIRE_MINUTES = 15
 
 def hash_password(password: str):
     return pwd_context.hash(password)
@@ -84,6 +84,7 @@ def validate_access_token(token: str):
 
 def authenticate_user(db: Session, username: str, password: str):
     user = db.query(User).filter(User.username == username).first()
+    print("test:")
     if user and verify_password(password, user.password_hash):
         return user
     return None
@@ -98,4 +99,4 @@ def register_user(db, username: str, password: str, email: str):
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-    return {"msg": "User registered successfully"}
+    return {"msg": "User registered successfully", "user_id": new_user.id, "user_name": new_user.username}

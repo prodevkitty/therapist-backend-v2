@@ -25,7 +25,7 @@ class ProgressResponse(BaseModel):
     class Config:
         orm_mode = True
 
-@router.post("/progress", response_model=ProgressResponse)
+@router.post("/create", response_model=ProgressResponse)
 def create_progress(progress: ProgressCreate, db: Session = Depends(get_db)):
     """
     Create a new progress entry.
@@ -36,18 +36,19 @@ def create_progress(progress: ProgressCreate, db: Session = Depends(get_db)):
     db.refresh(db_progress)
     return db_progress
 
-@router.get("/progress/{user_id}", response_model=list[ProgressResponse])
+@router.get("/get/{user_id}", response_model=list[ProgressResponse])
 def get_progress(user_id: int, db: Session = Depends(get_db)):
     """
     Get all progress entries for a user.
     """
+    print(user_id)
     return db.query(Progress).filter(Progress.user_id == user_id).all()
 
-@router.get("/progress_report/{user_id}", response_model=list[ProgressResponse])
-def get_weekly_progress_report(user_id: int, db: Session = Depends(get_db)):
-    """
-    Get the weekly progress report for a user.
-    """
-    from datetime import datetime, timedelta
-    one_week_ago = datetime.now() - timedelta(days=7)
-    return db.query(Progress).filter(Progress.user_id == user_id, Progress.date >= one_week_ago).all()
+# @router.get("/progress_report/{user_id}", response_model=list[ProgressResponse])
+# def get_weekly_progress_report(user_id: int, db: Session = Depends(get_db)):
+#     """
+#     Get the weekly progress report for a user.
+#     """
+#     from datetime import datetime, timedelta
+#     one_week_ago = datetime.now() - timedelta(days=7)
+#     return db.query(Progress).filter(Progress.user_id == user_id, Progress.date >= one_week_ago).all()

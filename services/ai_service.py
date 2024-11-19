@@ -44,12 +44,27 @@ async def process_audio_to_text(base64_audio: str):
 
 
 # Processing the response from AI (Llama3.1-8B)
+# async def get_answer(input_text: str):
+#     preprocessed_text = preprocess_text(input_text)
+    
+#     chat_completion = client.chat.completions.create(
+#         model="llama3.1-8b",
+#         messages=[{"role": "user", "content": preprocessed_text}],
+#     )
+    
+#     message_content = chat_completion.choices[0].message.content
+#     return {"response": message_content}
+
 async def get_answer(input_text: str):
+    # Preprocess input to include clear conversational context
     preprocessed_text = preprocess_text(input_text)
     
     chat_completion = client.chat.completions.create(
         model="llama3.1-8b",
-        messages=[{"role": "user", "content": preprocessed_text}],
+        messages=[
+            {"role": "system", "content": "You are a kind and empathetic virtual therapist. Engage users with reflective questions and avoid direct advice. Build on their input step by step."},
+            {"role": "user", "content": preprocessed_text},
+        ],
     )
     
     message_content = chat_completion.choices[0].message.content
