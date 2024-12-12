@@ -1,3 +1,7 @@
 therapist_backend_v2/*
-app/__pycache__/*
+__pycache__/*
+models/__pycache__/*
+routers/__pycache__/*
+services/__pycache__/*
 projectStrategy.txt
+.env

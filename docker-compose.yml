@@ -1,5 +1,56 @@
+
 services:
-  web:
-    build: .
+  postgres:
+    image: postgres:13
+    container_name: postgres_container
+    environment:
+      POSTGRES_USER: prodevkitty
+      POSTGRES_PASSWORD: prodevkitty827
+      POSTGRES_DB: prodevDB
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+      - /etc/localtime:/etc/localtime:ro  # Mount host's localtime
+      - /etc/timezone:/etc/timezone:ro    # Mount host's localtime
     ports:
-      - "8000:80"
+      - "5432:5432" #5433:5432
+    networks:
+      - mynetwork
+
+  redis:
+    image: redis:alpine
+    container_name: redis_container
+    ports:
+      - "6379:6379" #6380:6379
+    volumes:
+      - /etc/localtime:/etc/localtime:ro  # Mount host's localtime
+      - /etc/timezone:/etc/timezone:ro    # Mount host's localtime
+    networks:
+      - mynetwork
+
+  fastapi:
+    build: .
+    container_name: fastapi_container
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload #8001
+    volumes:
+      - .:/app
+      - /etc/localtime:/etc/localtime:ro  # Mount host's localtime
+      - /etc/timezone:/etc/timezone:ro    # Mount host's timezone
+    ports:
+      - "8000:8000" #8001:8001
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      DATABASE_URL: "postgresql://prodevkitty:prodevkitty827@postgres:5432/prodevDB"
+      REDIS_URL: "redis://redis:6379/0"
+      CEREBRAS_API_KEY: "csk-nvjvd3px8px3x855rymkp54mypv6fcw8n3vhn2nf8vf2xhr8"
+      TZ: "UTC"
+    networks:
+      - mynetwork
+
+volumes:
+  postgres_data:
+
+networks:
+  mynetwork:

@@ -1,22 +1,23 @@
-FROM tiangolo/uvicorn-gunicorn-fastapi:python3.8
+# Base image
+FROM python:3.9-slim
 
-# Set working directory
+# Set the environment variable for timezone to UTC
+ENV TZ=UTC
+
+# Set the working directory
 WORKDIR /app
 
-# Copy pre-downloaded packages
-COPY ./therapist_backend_v2/Lib/site-packages /packages
+# Copy only requirements.txt first
+COPY requirements.txt .
 
-# Copy only the requirements file first to leverage Docker cache
-COPY ./app/requirements.txt /app/requirements.txt
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Install dependencies from local directory
-RUN pip install --no-index --find-links=/packages -r /app/requirements.txt
+# Copy the rest of your application code
+COPY . .
 
-# Copy the application code
-COPY ./app /app
+# Expose the necessary ports
+EXPOSE 8000
 
-# Copy the model files
-COPY ./app/data/training_data.jsonl /app/data/training_data.jsonl
-
-# Set the command to run the FastAPI application
-CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "app.main:app", "--bind", "0.0.0.0:80", "--workers", "4"]
+# Command to run your application
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
