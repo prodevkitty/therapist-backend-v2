@@ -50,10 +50,7 @@ async def generate_notifications(username: str, db: Session):
     # Calculate improvement percentage (example logic)
     initial_stress_level = int(user_progress[0].stress_level)
     latest_stress_level = int(user_progress[-1].stress_level)
-    improvement_percentage = ((initial_stress_level - latest_stress_level) / initial_stress_level) * 100
-    print("improvement_percentage:")
-    print(improvement_percentage)
-
+    improvement_percentage = int(((initial_stress_level - latest_stress_level) / initial_stress_level) * 100)
 
     # Generate motivational message using AI service
     motivational_message = generate_motivational_message(improvement_percentage)

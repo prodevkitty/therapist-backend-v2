@@ -4,7 +4,7 @@ from database import Base
 
 class Progress(Base):
     __tablename__ = 'progress_tracking'
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey('users.id'))
     date = Column(DateTime)
     stress_level = Column(Integer)
