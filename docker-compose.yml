@@ -13,7 +13,7 @@ services:
       - /etc/localtime:/etc/localtime:ro  # Mount host's localtime
       - /etc/timezone:/etc/timezone:ro    # Mount host's localtime
     ports:
-      - "5432:5432" #5433:5432
+      - "5433:5432" #5433:5432
     networks:
       - mynetwork
 
@@ -21,7 +21,7 @@ services:
     image: redis:alpine
     container_name: redis_container
     ports:
-      - "6379:6379" #6380:6379
+      - "6380:6379" #6380:6379
     volumes:
       - /etc/localtime:/etc/localtime:ro  # Mount host's localtime
       - /etc/timezone:/etc/timezone:ro    # Mount host's localtime
@@ -31,13 +31,13 @@ services:
   fastapi:
     build: .
     container_name: fastapi_container
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload #8001
+    command: uvicorn main:app --host 0.0.0.0 --port 8001 --reload #8001
     volumes:
       - .:/app
       - /etc/localtime:/etc/localtime:ro  # Mount host's localtime
       - /etc/timezone:/etc/timezone:ro    # Mount host's timezone
     ports:
-      - "8000:8000" #8001:8001
+      - "8001:8001" #8001:8001
     depends_on:
       - postgres
       - redis

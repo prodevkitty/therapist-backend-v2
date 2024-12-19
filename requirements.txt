@@ -22,7 +22,7 @@ python-jose==3.3.0
 python-dotenv==1.0.0
 
 # Cerebras AI SDK for your Llama model integration
-cerebras-cloud-sdk==1.5.0
+cerebras-cloud-sdk==1.14.0
 
 # Libraries for voice and audio handling
 pydub==0.25.1

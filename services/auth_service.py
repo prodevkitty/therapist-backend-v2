@@ -82,8 +82,8 @@ def validate_access_token(token: str):
     except JWTError:
         raise HTTPException(status_code=401, detail="Token expired or invalid")
 
-def authenticate_user(db: Session, username: str, password: str):
-    user = db.query(User).filter(User.username == username).first()
+def authenticate_user(db: Session, email: str, password: str):
+    user = db.query(User).filter(User.email == email).first()
     print("test:")
     if user and verify_password(password, user.password_hash):
         return user

@@ -7,6 +7,7 @@ import io
 
 # Initialize Cerebras client
 api_key = os.getenv('CEREBRAS_API_KEY')
+print(api_key)
 if not api_key:
     raise ValueError("CEREBRAS_API_KEY environment variable not set")
 

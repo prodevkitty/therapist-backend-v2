@@ -24,7 +24,7 @@ async def generate_recommendation_message(improvement_percentage, language='en')
     ai_response = await get_answer(request_msg_AI)
     return ai_response.get('response')
 
-async def generate_notifications(username: str, db: Session): 
+async def generate_notifications(email: str, db: Session): 
     """
     Generate notifications for a user based on their progress.
 
@@ -38,7 +38,7 @@ async def generate_notifications(username: str, db: Session):
     Raises:
         HTTPException: If the user is not found.
     """
-    user = db.query(User).filter(User.username == username).first()
+    user = db.query(User).filter(User.email == email).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     

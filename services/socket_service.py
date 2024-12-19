@@ -40,9 +40,9 @@ async def connect(sid, environ, auth):
         # Extract and validate token
         token = auth['token'].split(" ")[1]
         user = validate_access_token(token)  # This will raise JWTError if token is invalid
-        username = user['sub']
+        email = user['sub']
         print(f"User {user['sub']} connected with session {sid}")
-        notification_message = await generate_notifications(username, db)
+        notification_message = await generate_notifications(email, db)
         print(notification_message)
         await sio.emit('first_notification', {'notification': notification_message}, to=sid)
     except HTTPException as e:
@@ -126,8 +126,8 @@ async def user_message_advanced(sid, data):
             raise JWTError("Missing authorization token")
         
         user = validate_access_token(token)
-        user_name = user['sub']
-        user_record = db.query(User).filter(User.username == user_name).first()
+        user_email = user['sub']
+        user_record = db.query(User).filter(User.email == user_email).first()
         user_id = user_record.id if user_record else None
 
         print(f"User ID: {user_id}")
@@ -158,7 +158,7 @@ async def user_message_advanced(sid, data):
         print(f"Conversation history: {conversation_history}")
         # Prepare AI input
         instructions = (
-            "You are a virtual therapist. Use the conversation history to reflect on past questions and answers. "
+            "You are a virtual therapist. Use the conversation history to reflect on past questions and answers. But remember, do not return history to user."
             "Build on the user's input and avoid repeating yourself. Provide empathetic, supportive, and actionable guidance "
             "when sufficient context is available. Summarize key points before offering suggestions."
         )
@@ -200,8 +200,8 @@ async def end_session(sid, data):
             raise JWTError("Missing authorization token")
         
         user = validate_access_token(token)
-        user_name = user['sub']
-        user_record = db.query(User).filter(User.username == user_name).first()
+        user_email = user['sub']
+        user_record = db.query(User).filter(User.email == user_email).first()
         user_id = user_record.id if user_record else None
 
         if not user_id:
